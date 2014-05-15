@@ -15,11 +15,9 @@
 apply plugin: "java"
 apply plugin: "scala"
 apply plugin: "groovy"
-apply plugin: 'signing' // For pushing to Sonatype OSS Staging repository
-apply plugin: 'bintray'
 apply plugin: 'maven-publish'
 
-version = '0.4.1'
+version = '0.4.1-nexelem-SNAPSHOT'
 group = "org.github.mansur.scalastyle"
 
 buildscript {
@@ -32,8 +30,30 @@ buildscript {
 }
 
 repositories {
-    mavenCentral()
-    jcenter()
+    repositories {
+        maven {
+          url "http://nexus.nexelem.com:8081/nexus/content/groups/public"
+        }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+
+        println configurations.runtime.allDependencies
+    }
+    repositories {
+        maven {
+            credentials {
+                username nexusUser
+                password nexusPassword
+            }
+            url  "http://nexus.nexelem.com:8081/nexus/content/repositories/snapshots"
+        }
+    }
 }
 
 dependencies {
@@ -72,36 +92,6 @@ artifacts {
     }
     javadoc(javadocJar) {
         type "javadoc"
-    }
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-
-            artifact sourcesJar {
-                classifier "sources"
-            }
-
-            artifact javadocJar {
-                classifier "javadoc"
-            }
-        }
-    }
-}
-
-bintray {        
-    user = project.hasProperty('user') ? project.user : ''
-    key = project.hasProperty('key') ? project.key : ''
-    publications = ['mavenJava']
-    pkg {
-        repo = 'release'
-        userOrg = 'releashaus'
-        name = 'gradle-scalastyle-plugin'
-        desc = 'gradle-scalastyle is a Gradle plugin for running the Scalastyle style checker.'
-        licenses = ['Apache-2.0']
-        labels = ['v4.1']
     }
 }
 
